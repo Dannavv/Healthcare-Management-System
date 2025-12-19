@@ -1,0 +1,148 @@
+/* Container Card */
+.book-appointment-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 1.5rem;
+}
+
+/* Form Styles */
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.custom-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #edf2f7;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-size: 1rem;
+}
+
+.custom-select:focus {
+  border-color: #4f46e5;
+}
+
+/* Date Picker Row */
+.date-scroll-row {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+}
+
+.date-card {
+  flex: 0 0 65px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0;
+  border: 2px solid #edf2f7;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-card .day-label { font-size: 0.7rem; color: #a0aec0; text-transform: uppercase; }
+.date-card .day-number { font-size: 1.2rem; font-weight: 700; color: #2d3748; }
+
+.date-card.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.date-card.active .day-label, 
+.date-card.active .day-number { color: #fff; }
+
+.date-card.disabled { opacity: 0.4; cursor: not-allowed; background: #f7fafc; }
+
+/* Time Slots */
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.time-slot-btn {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1a202c;
+}
+
+.time-slot-btn.is-available:hover {
+  border-color: #4f46e5;
+  background: #f5f3ff;
+}
+
+.time-slot-btn .time-text { font-weight: 700; font-size: 0.95rem; }
+.time-slot-btn .status-text { font-size: 0.7rem; color: #a0aec0; }
+
+.time-slot-btn.is-disabled {
+  background: #f7fafc;
+  border-color: #edf2f7;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Status Banner */
+.status-banner {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.status-banner.success { background: #f0fdf4; color: #166534; }
+.status-banner.error { background: #fef2f2; color: #991b1b; }
+
+/* Animations */
+.animate-in {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-alt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.inline-date-picker {
+  border: 1px solid #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
