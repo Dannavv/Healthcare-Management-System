@@ -34,3 +34,29 @@ The system follows a client-server architecture where the React frontend communi
 - task 05 : Implement appointment functionality, allowing patients to book, view, and manage appointments with doctors.
 
 
+## **Responsibilities**
+
+* **Muzammil A Karimi**
+
+  * Designed and developed React UI components
+  * Implemented patient and doctor dashboards
+  * Integrated frontend with backend APIs
+
+* **Saksham Wane**
+
+  * Developed backend APIs using Django Rest Framework
+  * Implemented authentication and authorization logic
+  * Handled business logic for appointments and users
+
+* **Valikala Manohar**
+
+  * Designed MongoDB schemas and collections
+  * Optimized database queries and relationships
+  * Ensured data consistency and integrity
+
+* **Arpit Anand**
+
+  * Full-stack feature integration and API consumption
+  * **Git repository management and version control**
+  * **Deployment setup and environment configuration**
+  * Backend–frontend integration and overall system coordination

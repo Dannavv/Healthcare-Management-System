@@ -236,6 +236,9 @@ env/
 .venv/
 virtualenv/
 
+venv/*
+
+
 # Django stuff
 media/
 staticfiles/
