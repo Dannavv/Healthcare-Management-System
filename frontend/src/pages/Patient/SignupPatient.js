@@ -43,6 +43,13 @@ const SignupPatient = () => {
     });
     */
 
+    await fetch("http://localhost:5000/api/auth/patient/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+
     // 🟢 DUMMY STORAGE
     const patients = JSON.parse(localStorage.getItem("patients")) || [];
 

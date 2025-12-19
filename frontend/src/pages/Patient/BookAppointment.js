@@ -1,174 +1,125 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../Style/Style.css";
 
 const BookAppointment = ({ patient, onBooked }) => {
-  const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-  const appointments =
-    JSON.parse(localStorage.getItem("appointments")) || [];
-
+  const [doctors, setDoctors] = useState([]);
   const [specialization, setSpecialization] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
+  const [bookedSlots, setBookedSlots] = useState([]);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/doctors");
+        const data = await res.json();
+        setDoctors(data);
+      } catch (err) {
+        console.error("Failed to load doctors", err);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
+  // Map "expertise" from doctorProfile for the dropdown
   const specializations = [
-    ...new Set(doctors.map((d) => d.specialization))
-  ];
+    ...new Set(doctors.map((d) => d.doctorProfile?.expertise))
+  ].filter(Boolean);
 
   const filteredDoctors = doctors.filter(
-    (d) => d.specialization === specialization
+    (d) => d.doctorProfile?.expertise === specialization
   );
 
-  const isWeekend = (date) => {
-    const day = new Date(date).getDay();
-    return day === 0 || day === 6;
-  };
+  const handleBook = async (slotString, dayName) => { // Accept dayName as an argument
+  setLoading(true);
+  setMessage("");
 
-  const bookSlot = (hour) => {
-    const conflict = appointments.some(
-      (a) =>
-        a.doctorEmail === selectedDoctor.email &&
-        a.date === selectedDate &&
-        a.hour === hour
-    );
-
-    if (conflict) {
-      setMessage("Slot already booked");
-      return;
-    }
-
-    // 🔴 API VERSION
-    /*
-    await fetch("/api/appointments", {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:5000/api/patient/book", {
       method: "POST",
-      body: JSON.stringify({ doctorId, patientId, date, hour })
+      headers: {
+        "Content-Type": "application/json",
+        "x-auth-token": token,
+      },
+      body: JSON.stringify({
+        doctorId: selectedDoctor._id,
+        date: dayName,  // Use the passed argument instead of state
+        hour: slotString,
+      }),
     });
-    */
 
-    const updatedAppointments = [
-      ...appointments,
-      {
-        doctorEmail: selectedDoctor.email,
-        doctorName: selectedDoctor.name,
-        patientEmail: patient.email,
-        patientName: patient.name,
-        date: selectedDate,
-        hour
-      }
-    ];
-
-    localStorage.setItem(
-      "appointments",
-      JSON.stringify(updatedAppointments)
-    );
-
-    setMessage("Appointment booked successfully");
-    onBooked();
-  };
+    const data = await res.json();
+    if (res.ok) {
+      setMessage(`Booked for ${dayName} at ${slotString}!`);
+      if (onBooked) onBooked();
+    } else {
+      setMessage(data.message || "Booking failed");
+    }
+  } catch (err) {
+    setMessage("Server error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="book-container">
       <h3>Book Appointment</h3>
 
-      {/* Specialization */}
+      {/* 1. Specialization Select */} 
       <div className="form-group">
-        <label>Specialization</label>
-        <select
-          value={specialization}
-          onChange={(e) => {
-            setSpecialization(e.target.value);
-            setSelectedDoctor(null);
-            setSelectedDate("");
-          }}
-        >
-          <option value="">Select</option>
+        <label>Specialization (Expertise)</label>
+        <select value={specialization} onChange={(e) => setSpecialization(e.target.value)}>
+          <option value="">Select Expertise</option>
           {specializations.map((s) => (
-            <option key={s}>{s}</option>
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
       </div>
 
-      {/* Doctor */}
+      {/* 2. Doctor Select */}
       {specialization && (
         <div className="form-group">
           <label>Doctor</label>
-          <select
-            onChange={(e) =>
-              setSelectedDoctor(
-                filteredDoctors.find(
-                  (d) => d.email === e.target.value
-                )
-              )
-            }
-          >
+          <select onChange={(e) => setSelectedDoctor(doctors.find(d => d._id === e.target.value))}>
             <option value="">Select Doctor</option>
             {filteredDoctors.map((d) => (
-              <option key={d.email} value={d.email}>
-                Dr. {d.name}
-              </option>
+              <option key={d._id} value={d._id}>{d.name}</option>
             ))}
           </select>
         </div>
       )}
 
-      {/* Date */}
+      {/* 3. Availability Display */}
       {selectedDoctor && (
-        <div className="form-group">
-          <label>Date</label>
-          <input
-            type="date"
-            min={new Date().toISOString().split("T")[0]}
-            onChange={(e) => {
-              if (isWeekend(e.target.value)) {
-                setMessage("Weekends are not allowed");
-                setSelectedDate("");
-              } else {
-                setMessage("");
-                setSelectedDate(e.target.value);
-              }
-            }}
-          />
+        <div className="availability-info">
+          <h4>Available Slots for Dr. {selectedDoctor.name}</h4>
+          {selectedDoctor.doctorProfile.availability.map((avail) => (
+            <div key={avail._id} className="day-section">
+              <strong>{avail.day}:</strong>
+              <div className="slots-grid">
+                {avail.slots.map((slot) => (
+                  <button
+                    key={slot}
+                    className="slot-button"
+                    onClick={() => {
+                      setSelectedDate(avail.day); // Setting day as date for now
+                      handleBook(slot);
+                    }}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Slots */}
-      {selectedDoctor && selectedDate && (
-        <div className="slots">
-          {Array.from(
-            {
-              length:
-                selectedDoctor.availability.endHour -
-                selectedDoctor.availability.startHour
-            },
-            (_, i) => {
-              const hour =
-                selectedDoctor.availability.startHour + i;
-
-              const booked = appointments.some(
-                (a) =>
-                  a.doctorEmail === selectedDoctor.email &&
-                  a.date === selectedDate &&
-                  a.hour === hour
-              );
-
-              return (
-                <div
-                  key={hour}
-                  className={`slot ${
-                    booked ? "booked" : "available"
-                  }`}
-                  onClick={() => !booked && bookSlot(hour)}
-                >
-                  {hour}:00 - {hour + 1}:00
-                  <span>{booked ? "Booked" : "Available"}</span>
-                </div>
-              );
-            }
-          )}
-        </div>
-      )}
-
-      {message && <p className="error-msg">{message}</p>}
+      {message && <p className="msg">{message}</p>}
     </div>
   );
 };

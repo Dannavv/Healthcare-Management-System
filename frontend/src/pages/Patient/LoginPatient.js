@@ -22,30 +22,21 @@ const LoginPatient = () => {
     setLoading(true);
 
     try {
-      // 🔴 API VERSION (enable later)
-      /*
-      const res = await fetch("http://localhost:8000/api/patient/login/", {
+      const res = await fetch("http://localhost:5000/api/auth/patient/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }) // Send raw password
       });
+
       const data = await res.json();
-      */
 
-      // 🟢 DUMMY VERSION
-      const patients = JSON.parse(localStorage.getItem("patients")) || [];
-      const hashedInput = await hashPassword(password);
-
-      const patient = patients.find(
-        (p) => p.email === email && p.password === hashedInput
-      );
-
-      if (!patient) {
-        throw new Error("Invalid email or password");
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
       }
 
-      localStorage.setItem("token", "dummy-jwt-token");
-      localStorage.setItem("patient", JSON.stringify(patient));
+      // ✅ Store real JWT and patient data
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("patient", JSON.stringify(data.patient));
 
       window.location.href = "/Patient_dashboard";
     } catch (err) {

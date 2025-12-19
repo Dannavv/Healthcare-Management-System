@@ -8,26 +8,31 @@ const EditProfile = ({ patient }) => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const saveProfile = () => {
-    // 🔴 API VERSION
-    /*
-    await fetch("/api/patient/profile", ...)
-    */
+  const saveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token"); // Get token stored during login
 
-    const patients = JSON.parse(localStorage.getItem("patients")) || [];
-    const updated = patients.map((p) =>
-      p.email === patient.email
-        ? { ...p, medicalInfo: form }
-        : p
-    );
+      const res = await fetch("http://localhost:5000/api/patient/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": token // Send token to authorize request
+        },
+        body: JSON.stringify(form)
+      });
 
-    localStorage.setItem("patients", JSON.stringify(updated));
-    localStorage.setItem(
-      "patient",
-      JSON.stringify({ ...patient, medicalInfo: form })
-    );
+      const data = await res.json();
 
-    setMessage("Profile updated successfully");
+      if (res.ok) {
+        // Update local state and storage with new data from server
+        localStorage.setItem("patient", JSON.stringify(data));
+        setMessage("Profile updated successfully!");
+      } else {
+        setMessage(data.message || "Update failed");
+      }
+    } catch (err) {
+      setMessage("Error connecting to server");
+    }
   };
 
   return (
