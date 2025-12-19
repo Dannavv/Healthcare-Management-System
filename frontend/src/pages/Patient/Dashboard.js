@@ -8,26 +8,17 @@ const PatientDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [goals, setGoals] = useState([]);
   const [view, setView] = useState("dashboard");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // 🔴 API VERSION
-    /*
-    fetch("/api/patient/appointments").then(...)
-    fetch("/api/patient/goals").then(...)
-    */
-
-    // 🟢 DUMMY VERSION
-    const allAppointments =
-      JSON.parse(localStorage.getItem("appointments")) || [];
-
-    const patientAppointments = allAppointments.filter(
-      (a) => a.patientEmail === patient.email
-    );
-
-    setAppointments(patientAppointments);
-
-    const allGoals = JSON.parse(localStorage.getItem("goals")) || [];
-    setGoals(allGoals.filter((g) => g.patientEmail === patient.email));
+    try {
+      const allAppointments = JSON.parse(localStorage.getItem("appointments")) || [];
+      setAppointments(allAppointments.filter((a) => a.patientEmail === patient.email));
+      const allGoals = JSON.parse(localStorage.getItem("goals")) || [];
+      setGoals(allGoals.filter((g) => g.patientEmail === patient.email));
+    } catch (err) {
+      setError("Failed to load dashboard data");
+    }
   }, [patient.email]);
 
   const logout = () => {
@@ -35,86 +26,110 @@ const PatientDashboard = () => {
     localStorage.removeItem("patient");
     window.location.href = "/Login_patient";
   };
+
   const cancelAppointment = (appointment) => {
-    // 🔴 API VERSION
-    /*
-  await fetch(`/api/appointments/${appointment.id}`, {
-    method: "DELETE"
-  });
-  */
+    try {
+      const allAppointments = JSON.parse(localStorage.getItem("appointments")) || [];
+      const updated = allAppointments.filter(
+        (a) => !(a.patientEmail === appointment.patientEmail && a.doctorEmail === appointment.doctorEmail && a.date === appointment.date && a.hour === appointment.hour)
+      );
+      localStorage.setItem("appointments", JSON.stringify(updated));
+      setAppointments(updated.filter((a) => a.patientEmail === patient.email));
+    } catch {
+      setError("Unable to cancel appointment");
+    }
+  };
 
-    const allAppointments =
-      JSON.parse(localStorage.getItem("appointments")) || [];
-
-    const updated = allAppointments.filter(
-      (a) =>
-        !(
-          a.patientEmail === appointment.patientEmail &&
-          a.doctorEmail === appointment.doctorEmail &&
-          a.date === appointment.date &&
-          a.hour === appointment.hour
-        )
-    );
-
-    localStorage.setItem("appointments", JSON.stringify(updated));
-    setAppointments(updated.filter((a) => a.patientEmail === patient.email));
+  const updateGoalStatus = (goal, status) => {
+    try {
+      const allGoals = JSON.parse(localStorage.getItem("goals")) || [];
+      const updatedGoals = allGoals.map((g) =>
+        g.patientEmail === goal.patientEmail && g.type === goal.type && g.target === goal.target
+          ? { ...g, status } : g
+      );
+      localStorage.setItem("goals", JSON.stringify(updatedGoals));
+      setGoals(updatedGoals.filter((g) => g.patientEmail === patient.email));
+    } catch {
+      setError("Failed to update goal");
+    }
   };
 
   return (
-    <div className="dashboard">
-      <h2>Welcome, {patient.name}</h2>
+    <div className="dashboard-container">
+      {/* SIDEBAR */}
+      <aside className="dashboard-sidebar">
+        <div className="sidebar-header">
+          <div className="avatar">{patient.name.charAt(0)}</div>
+          <p>Welcome back,</p>
+          <h3>{patient.name}</h3>
+        </div>
+        <nav className="dashboard-tabs">
+          <button className={view === "dashboard" ? "active" : ""} onClick={() => setView("dashboard")}>Overview</button>
+          <button className={view === "book" ? "active" : ""} onClick={() => setView("book")}>Book Appointment</button>
+          <button className={view === "profile" ? "active" : ""} onClick={() => setView("profile")}>My Profile</button>
+          <button className="logout-tab" onClick={logout}>Logout</button>
+        </nav>
+      </aside>
 
-      <div className="dashboard-tabs">
-        <button onClick={() => setView("dashboard")}>Dashboard</button>
-        <button onClick={() => setView("book")}>Book Appointment</button>
-        <button onClick={() => setView("profile")}>Edit Profile</button>
-        <button onClick={logout}>Logout</button>
-      </div>
+      {/* MAIN CONTENT */}
+      <main className="dashboard-main">
+        {error && <div className="error-msg">{error}</div>}
 
-      {view === "dashboard" && (
-        <>
-          <h3>Your Appointments</h3>
-          {appointments.length === 0 ? (
-            <p>No appointments yet</p>
-          ) : (
-            <ul className="list">
-              {appointments.map((a, i) => (
-                <li key={i}>
-                  Dr. {a.doctorName} | {a.date} | {a.hour}:00 - {a.hour + 1}:00
-                  <button
-                    className="cancel-btn"
-                    onClick={() => cancelAppointment(a)}
-                  >
-                    Cancel
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+        {view === "dashboard" && (
+          <div className="dashboard-content animate-fade-in">
+            <header className="content-header">
+              <h2>Health Overview</h2>
+              <p>Manage your upcoming visits and health targets.</p>
+            </header>
 
-          <h3>Your Goals</h3>
-          {goals.length === 0 ? (
-            <p>No goals assigned</p>
-          ) : (
-            <ul className="list">
-              {goals.map((g, i) => (
-                <li key={i}>
-                  <strong>{g.type}</strong>: {g.target}
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
+            <section className="dashboard-section">
+              <h3>Upcoming Appointments</h3>
+              <div className="card-grid">
+                {appointments.length === 0 ? (
+                  <div className="empty-state">No appointments scheduled</div>
+                ) : (
+                  appointments.map((a, i) => (
+                    <div className="card appointment-card" key={i}>
+                      <div className="card-info">
+                        <h4>Dr. {a.doctorName}</h4>
+                        <p className="date-text">{a.date}</p>
+                        <p className="time-text">{a.hour}:00 - {a.hour + 1}:00</p>
+                      </div>
+                      <button className="btn-outline-danger" onClick={() => cancelAppointment(a)}>Cancel</button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
 
-      {view === "book" && (
-        <BookAppointment
-          patient={patient}
-          onBooked={() => setView("dashboard")}
-        />
-      )}
+            <section className="dashboard-section">
+              <h3>Wellness Goals</h3>
+              <div className="card-grid">
+                {goals.length === 0 ? (
+                  <div className="empty-state">No wellness goals assigned</div>
+                ) : (
+                  goals.map((g, i) => (
+                    <div className="card goal-card" key={i}>
+                      <div className="goal-header">
+                        <span className={`status-badge ${g.status || "pending"}`}>{g.status || "pending"}</span>
+                        <h4>{g.type}</h4>
+                      </div>
+                      <p className="goal-target">{g.target}</p>
+                      <div className="goal-actions">
+                        <button className="btn-sm" onClick={() => updateGoalStatus(g, "in-progress")}>In Progress</button>
+                        <button className="btn-sm btn-success" onClick={() => updateGoalStatus(g, "completed")}>Complete</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+        )}
 
-      {view === "profile" && <EditProfile patient={patient} />}
+        {view === "book" && <div className="p-4"><BookAppointment patient={patient} onBooked={() => setView("dashboard")} /></div>}
+        {view === "profile" && <div className="p-4"><EditProfile patient={patient} /></div>}
+      </main>
     </div>
   );
 };

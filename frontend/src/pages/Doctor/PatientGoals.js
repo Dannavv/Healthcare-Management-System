@@ -1,72 +1,104 @@
 import React, { useState } from "react";
 import "../../Style/Style.css";
 
-const PatientDetail = ({ appointment, goals, onSetGoal }) => {
-  const patients = JSON.parse(localStorage.getItem("patients")) || [];
-  const patient = patients.find(
-    (p) => p.email === appointment.patientEmail
-  );
-
+const PatientGoals = ({
+  appointment,
+  goals,
+  onSetGoal,
+  canSetGoal
+}) => {
   const [type, setType] = useState("");
   const [target, setTarget] = useState("");
+  const [error, setError] = useState("");
+
+  const submitGoal = () => {
+    setError("");
+
+    if (!type || !target) {
+      setError("Please select goal type and target");
+      return;
+    }
+
+    // 🔴 API VERSION (future)
+    /*
+    await fetch("/api/goals", {
+      method: "POST",
+      body: JSON.stringify({
+        patientEmail: appointment.patientEmail,
+        type,
+        target
+      })
+    });
+    */
+
+    onSetGoal(appointment.patientEmail, type, target);
+    setType("");
+    setTarget("");
+  };
 
   return (
     <div className="panel">
-      <h3>Patient Details</h3>
+      <h3>Patient: {appointment.patientName}</h3>
 
-      <p><strong>Name:</strong> {appointment.patientName}</p>
-      <p><strong>Email:</strong> {appointment.patientEmail}</p>
+      <p>
+        Appointment Date: <strong>{appointment.date}</strong>
+      </p>
 
-      {patient?.medicalInfo && (
-        <>
-          <p><strong>Age:</strong> {patient.medicalInfo.age}</p>
-          <p><strong>Blood Group:</strong> {patient.medicalInfo.bloodGroup}</p>
-          <p><strong>Allergies:</strong> {patient.medicalInfo.allergies}</p>
-          <p><strong>Medications:</strong> {patient.medicalInfo.medications}</p>
-        </>
-      )}
-
+      {/* GOALS LIST */}
       <h4>Assigned Goals</h4>
       {goals.length === 0 ? (
-        <p>No goals yet</p>
+        <p>No goals assigned</p>
       ) : (
         <ul className="goal-list">
           {goals.map((g, i) => (
             <li key={i}>
-              {g.type}: {g.target}
+              <strong>{g.type}</strong>: {g.target}
+              <span className="goal-status">
+                Status: {g.status || "pending"}
+              </span>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="goal-form">
-        <select onChange={(e) => setType(e.target.value)}>
-          <option value="">Goal Type</option>
-          <option>Steps</option>
-          <option>Water</option>
-          <option>Sleep</option>
-          <option>Exercise</option>
-        </select>
+      {/* GOAL FORM */}
+      {canSetGoal ? (
+        <>
+          <h4>Set New Goal</h4>
 
-        <input
-          placeholder="Target"
-          onChange={(e) => setTarget(e.target.value)}
-        />
+          {error && <p className="error-msg">{error}</p>}
 
-        <button
-          onClick={() => {
-            if (type && target) {
-              onSetGoal(appointment.patientEmail, type, target);
-              setType("");
-              setTarget("");
-            }
-          }}
-        >
-          Set Goal
-        </button>
-      </div>
+          <div className="goal-form">
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+            >
+              <option value="">Select Goal Type</option>
+              <option>Steps</option>
+              <option>Water</option>
+              <option>Sleep</option>
+              <option>Exercise</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Target (e.g. 8000 steps/day)"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+            />
+
+            <button onClick={submitGoal}>
+              Assign Goal
+            </button>
+          </div>
+        </>
+      ) : (
+        <p className="info-msg">
+          Goals can be assigned only after the patient visit.
+        </p>
+      )}
     </div>
   );
 };
 
-export default PatientDetail;
+export default PatientGoals;
