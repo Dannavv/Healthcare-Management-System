@@ -24,7 +24,7 @@ A full-stack Healthcare Management System built with React, Django (DRF), and Mo
 The system follows a client-server architecture where the React frontend communicates with the Django backend via RESTful APIs. The backend interacts with the MongoDB database to store and retrieve data. 
 ![Healthcare Management System Architecture](System_arch.png)
 
-# Database Schema
+# Database model
 ![Healthcare Management System Architecture](er_model.png)
 
 # Planning and Design
