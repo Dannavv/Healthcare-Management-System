@@ -25,7 +25,7 @@ The system follows a client-server architecture where the React frontend communi
 ![Healthcare Management System Architecture](System_arch.png)
 
 # Database model
-![Healthcare Management System Architecture](er_model.png)
+![Healthcare Management System Architecture](image.png)
 
 # Planning and Design
 - task 01 : Registration and Login System with JWT Authentication for Patients and Doctors, and also design the database schema for patients and doctors with react webpages. 
